@@ -184,6 +184,7 @@ vector<string>& LoadFromTxtFile(vector<string>& words) {
 }
 
 vector<string> words_library;
+mistake_counter mist_count;
 
 //класс Game для учета хода игры
 class Game
@@ -208,6 +209,7 @@ Game::Game() : tries{ 0 }
 
 	int temp = rand() % words_library.size();
 	game_word = words_library[temp];
+	vector<char> pl_letters;
 }
 int Game::get_tries() const
 {
@@ -242,20 +244,57 @@ void Start_Menu()
 	cout << "0 - Exit\n\n";
 }
 
+void Game_Menu(Game& object)
+{
+	char new_let;
+	Draw_Gallows(mist_count.get_count());
+
+	cout << "\nЗагаданное слово:\n";
+	string s_temp = object.get_word();
+	cout << "слово = " << s_temp << endl;
+
+	for (size_t i = 0; i < s_temp.length(); i++)
+	{
+		char let = s_temp[i];
+
+		if (object.get_pl_letters().size() != 0)
+		{
+			auto it = find(object.get_pl_letters().begin(),
+				object.get_pl_letters().end(),
+				let);
+
+			if (it != object.get_pl_letters().end())
+				cout << " _";
+			else
+				cout << " " << let;
+		}
+		else
+			cout << " _";
+		
+	}
+
+	cout << "\n\nУже были введены буквы: ";
+	for (auto var : object.get_pl_letters())
+		cout << var << " ";
+
+	cout << "\n\nВведите букву: ";
+
+}
+
 int main()
 {
 	setlocale(LC_ALL, "Russian");
-	mistake_counter mist_count;
-	vector<string> words_library, wl2;
+	srand(time(NULL));
 
 	try
 	{
 		/*LoadFromTxtFile(words_library);*/
 		LoadFromBinFile(words_library);
 
-		for (auto var : words_library)
-			cout << var << "\t";
-		cout << endl;
+		Game game;
+
+		Game_Menu(game);
+
 
 		SaveToFile(words_library);
 
