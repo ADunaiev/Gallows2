@@ -59,19 +59,24 @@ void Draw_Gallows(int temp)
 	cout << "+-----------\n";
 
 }
-int code_key = 10;
 
 //функтор для подсчета ошибок
 class mistake_counter
 {
 	int count;
+	const int max_errors = 8;
 public:
 	mistake_counter();
-	int get_count();
+	int get_count() const;
+	int get_max_errors() const;
 	int operator()();
 };
-int mistake_counter::get_count() {
+int mistake_counter::get_count() const{
 	return count;
+}
+int mistake_counter::get_max_errors() const
+{
+	return max_errors;
 }
 int mistake_counter::operator()()
 {
@@ -80,6 +85,7 @@ int mistake_counter::operator()()
 mistake_counter::mistake_counter() : count{ 0 } {}
 
 //кодирование/декодирование слов
+int code_key = 10;
 string& code(string& str)
 {
 	int temp;
@@ -199,7 +205,7 @@ public:
 	SYSTEMTIME get_start_time() const;
 	string get_word() const;
 	vector<char> get_pl_letters() const;
-	void set_tries(int triesP);
+	void do_try();
 	void set_letters(vector<char> lettersP);
 
 };
@@ -227,9 +233,9 @@ vector<char> Game::get_pl_letters() const
 {
 	return pl_letters;
 }
-void Game::set_tries(int triesP)
+void Game::do_try()
 {
-	tries = triesP;
+	tries++;
 }
 void Game::set_letters(vector<char> lettersP)
 {
@@ -250,23 +256,22 @@ void Game_Menu(Game& object)
 	Draw_Gallows(mist_count.get_count());
 
 	cout << "\nЗагаданное слово:\n";
-	string s_temp = object.get_word();
-	cout << "слово = " << s_temp << endl;
+	string s_temp1 = object.get_word();
+	cout << "слово = " << s_temp1 << endl;
+	vector<char> temp_let = object.get_pl_letters();
 
-	for (size_t i = 0; i < s_temp.length(); i++)
+	for ( int i = 0; i < s_temp1.length(); i++)
 	{
-		char let = s_temp[i];
+		char let = s_temp1[i];
 
-		if (object.get_pl_letters().size() != 0)
+		if (temp_let.size() != 0)
 		{
-			auto it = find(object.get_pl_letters().begin(),
-				object.get_pl_letters().end(),
-				let);
+			auto it = find(temp_let.begin(), temp_let.end(), let);
 
-			if (it != object.get_pl_letters().end())
-				cout << " _";
-			else
+			if (it != temp_let.end())
 				cout << " " << let;
+			else
+				cout << " _";
 		}
 		else
 			cout << " _";
@@ -283,7 +288,9 @@ void Game_Menu(Game& object)
 
 int main()
 {
-	setlocale(LC_ALL, "Russian");
+	setlocale(LC_ALL, "ru");
+	SetConsoleCP(1251);
+	SetConsoleOutputCP(1251);
 	srand(time(NULL));
 
 	try
@@ -292,9 +299,49 @@ int main()
 		LoadFromBinFile(words_library);
 
 		Game game;
+		string t_word = game.get_word();
+		vector<char>::iterator it1;
+		char letter_temp;
+		vector<char> vs;
 
-		Game_Menu(game);
+		while (mist_count.get_count() <= mist_count.get_max_errors())
+		{			
+			Game_Menu(game);
+			cin >> letter_temp;
+			
+			vs = game.get_pl_letters();
 
+			it1 = find(vs.begin(), vs.end(), letter_temp);
+
+			cout << "ok1" << endl;
+
+			if (it1 == vs.end() || vs.size() == 0)
+			{
+				vs.push_back(letter_temp);
+				game.set_letters(vs);
+				game.do_try();
+
+				auto it_word = find(t_word.begin(),
+					t_word.end(), letter_temp);
+
+				if (it_word != t_word.end())
+				{
+					cout << "\nЕсть такая буква в этом слове!\n";
+				}
+				else
+				{
+					cout << "\nОшибка... Нет такой буквы.\n";
+					mist_count();
+				}
+
+			}
+			else
+				cout << "\nВнесите правильную букву\n";
+
+			cout << "ok2" << endl;
+		}
+
+	
 
 		SaveToFile(words_library);
 
@@ -304,7 +351,10 @@ int main()
 	{
 		cout << "\n\n" << su << "\n\n" << endl;
 	}
-
+	catch (...)
+	{
+		cout << "\nSomething strange\n";
+	}
 
 
 	return 0;
