@@ -4,6 +4,7 @@
 #include<fstream>
 #include<string>
 #include<Windows.h>
+#include <chrono>
 using namespace std;
 
 //Создайте консольную версию игры «Виселица».
@@ -196,14 +197,12 @@ mistake_counter mist_count;
 class Game
 {
 	int tries;
-	SYSTEMTIME st_start;
 	string game_word;
 	vector<char> pl_letters;
 	bool win;
 public:
 	Game();
 	int get_tries() const;
-	SYSTEMTIME get_start_time() const;
 	string get_word() const;
 	vector<char> get_pl_letters() const;
 	void do_try();
@@ -213,7 +212,6 @@ public:
 };
 Game::Game() : tries{ 0 }, win {0}
 {
-	GetLocalTime(&st_start);
 
 	int temp = rand() % words_library.size();
 	game_word = words_library[temp];
@@ -222,10 +220,6 @@ Game::Game() : tries{ 0 }, win {0}
 int Game::get_tries() const
 {
 	return tries;
-}
-SYSTEMTIME Game::get_start_time() const
-{
-	return st_start;
 }
 string Game::get_word() const
 {
@@ -318,6 +312,8 @@ int main()
 		LoadFromBinFile(words_library);
 
 		Game game;
+		auto start = chrono::high_resolution_clock::now();
+
 		string t_word = game.get_word();
 		vector<char>::iterator it1;
 		char letter_temp;
@@ -367,7 +363,19 @@ int main()
 		else
 			cout << "ВЫ ВЫИГРАЛИ! ПОЗДРАВЛЯЕМ!" << endl;
 
-		SaveToFile(words_library);
+		auto finish = chrono::high_resolution_clock::now();
+		chrono::duration<float> duration = finish - start;
+
+		cout << "\n\nСтатистика игры:\n";
+		cout << "количество времени: " << duration.count() << " сек.\n";
+		cout << "количество попыток: " << game.get_tries() << endl;
+		cout << "искомое слово: " << game.get_word() << endl;
+		cout << "буквы игрока: ";
+		for (auto var : game.get_pl_letters())
+			cout << var << " ";
+		cout << endl << endl;
+
+		/*SaveToFile(words_library);*/
 
 
 	}
