@@ -199,6 +199,7 @@ class Game
 	SYSTEMTIME st_start;
 	string game_word;
 	vector<char> pl_letters;
+	bool win;
 public:
 	Game();
 	int get_tries() const;
@@ -207,9 +208,10 @@ public:
 	vector<char> get_pl_letters() const;
 	void do_try();
 	void set_letters(vector<char> lettersP);
-
+	bool IsWin();
+	void set_win();
 };
-Game::Game() : tries{ 0 }
+Game::Game() : tries{ 0 }, win {0}
 {
 	GetLocalTime(&st_start);
 
@@ -241,6 +243,14 @@ void Game::set_letters(vector<char> lettersP)
 {
 	pl_letters = lettersP;
 }
+bool Game::IsWin()
+{
+	return win;
+}
+void Game::set_win()
+{
+	win = 1;
+}
 
 void Start_Menu()
 {
@@ -252,12 +262,14 @@ void Start_Menu()
 
 void Game_Menu(Game& object)
 {
+	system("cls");
+	int check = 0;
 	char new_let;
 	Draw_Gallows(mist_count.get_count());
 
 	cout << "\nЗагаданное слово:\n";
 	string s_temp1 = object.get_word();
-	cout << "слово = " << s_temp1 << endl;
+
 	vector<char> temp_let = object.get_pl_letters();
 
 	for ( int i = 0; i < s_temp1.length(); i++)
@@ -269,7 +281,10 @@ void Game_Menu(Game& object)
 			auto it = find(temp_let.begin(), temp_let.end(), let);
 
 			if (it != temp_let.end())
+			{
 				cout << " " << let;
+				check++;
+			}
 			else
 				cout << " _";
 		}
@@ -282,8 +297,12 @@ void Game_Menu(Game& object)
 	for (auto var : object.get_pl_letters())
 		cout << var << " ";
 
-	cout << "\n\nВведите букву: ";
+	cout << "\n\nКоличество допущенных ошибок: " << mist_count.get_count() << endl;
 
+	if (check == s_temp1.size())
+		object.set_win();
+	else
+		cout << "\n\nВведите букву: ";
 }
 
 int main()
@@ -304,44 +323,49 @@ int main()
 		char letter_temp;
 		vector<char> vs;
 
-		while (mist_count.get_count() <= mist_count.get_max_errors())
+		while (mist_count.get_count() < mist_count.get_max_errors() && 
+			!game.IsWin())
 		{			
 			Game_Menu(game);
-			cin >> letter_temp;
-			
-			vs = game.get_pl_letters();
 
-			it1 = find(vs.begin(), vs.end(), letter_temp);
-
-			cout << "ok1" << endl;
-
-			if (it1 == vs.end() || vs.size() == 0)
+			if (!game.IsWin())
 			{
-				vs.push_back(letter_temp);
-				game.set_letters(vs);
-				game.do_try();
+				cin >> letter_temp;
 
-				auto it_word = find(t_word.begin(),
-					t_word.end(), letter_temp);
+				vs = game.get_pl_letters();
 
-				if (it_word != t_word.end())
+				it1 = find(vs.begin(), vs.end(), letter_temp);
+
+				if (it1 == vs.end() || vs.size() == 0)
 				{
-					cout << "\nЕсть такая буква в этом слове!\n";
+					vs.push_back(letter_temp);
+					game.set_letters(vs);
+					game.do_try();
+
+					auto it_word = find(t_word.begin(),
+						t_word.end(), letter_temp);
+
+					if (it_word != t_word.end())
+					{
+						cout << "\nЕсть такая буква в этом слове!\n";
+					}
+					else
+					{
+						cout << "\nОшибка... Нет такой буквы.\n";
+						mist_count();
+					}
+
 				}
 				else
-				{
-					cout << "\nОшибка... Нет такой буквы.\n";
-					mist_count();
-				}
-
+					cout << "\nВнесите правильную букву\n";
 			}
-			else
-				cout << "\nВнесите правильную букву\n";
 
-			cout << "ok2" << endl;
 		}
 
-	
+		if (!game.IsWin())
+			cout << "ВЫ ПРОИГРАЛИ..." << endl;
+		else
+			cout << "ВЫ ВЫИГРАЛИ! ПОЗДРАВЛЯЕМ!" << endl;
 
 		SaveToFile(words_library);
 
